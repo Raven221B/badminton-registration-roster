@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Badminton player registration and live roster">
+  <title>Badminton Registration & Roster</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, sans-serif; color:#13302a; background:#f3f7f5; }
+    * { box-sizing:border-box; }
+    body { margin:0; }
+    header { background:linear-gradient(125deg,#103b32,#23775b); color:#fff; padding:46px 20px; text-align:center; }
+    header h1 { margin:0 0 8px; font-size:clamp(1.8rem,5vw,2.7rem); }
+    header p { margin:0; color:#ddf5e8; }
+    main { max-width:990px; margin:26px auto; padding:0 16px 45px; display:grid; gap:20px; }
+    section { background:white; border:1px solid #d8e6df; border-radius:18px; padding:24px; box-shadow:0 6px 18px #0b35250b; }
+    h2 { margin:0 0 10px; font-size:1.35rem; }
+    .note { background:#fff5dc; color:#654b16; border:1px solid #f0d698; padding:12px; border-radius:10px; margin:15px 0; }
+    form { display:grid; gap:15px; margin-top:20px; }
+    label { font-weight:650; display:block; margin-bottom:6px; }
+    input,select { width:100%; padding:12px 13px; border:1px solid #bfd2c8; border-radius:10px; background:#fff; font:inherit; }
+    input:focus,select:focus { outline:2px solid #238d65; outline-offset:2px; }
+    button { border:0; border-radius:10px; background:#176d50; color:#fff; padding:13px; font:inherit; font-weight:700; cursor:pointer; }
+    button:focus-visible { outline:3px solid #ffce5b; outline-offset:3px; }
+    .status { margin-top:12px; min-height:24px; }
+    .filters { display:flex; flex-wrap:wrap; gap:9px; margin:16px 0; }
+    .filters button { background:#e6f2ec; color:#165940; padding:9px 12px; font-size:.88rem; }
+    .filters button[aria-pressed="true"] { background:#176d50; color:#fff; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; text-align:left; }
+    th,td { border-bottom:1px solid #e1ebe6; padding:12px 10px; white-space:nowrap; }
+    th { background:#f0f6f2; }
+    .muted { color:#587067; }
+    footer { text-align:center; font-size:.85rem; color:#60756c; padding:0 16px 24px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏸 Badminton Player Registration</h1>
+    <p>Register your team • View the roster • Stay updated</p>
+  </header>
+  <main>
+    <section>
+      <h2>Player Registration</h2>
+      <p class="muted">Complete the details below to register your team.</p>
+      <div class="note" role="status"><strong>Preview mode:</strong> Registration is not yet open. The database will be connected in Step 3.</div>
+      <form id="registrationForm">
+        <div><label for="player">Player's Full Name</label><input id="player" name="player" maxlength="100" placeholder="e.g., Juan Dela Cruz" required autocomplete="name"></div>
+        <div><label for="partner">Partner's Full Name</label><input id="partner" name="partner" maxlength="100" placeholder="e.g., Pedro Santos" required></div>
+        <div><label for="category">Category</label>
+          <select id="category" name="category" required>
+            <option value="">Select category</option>
+            <option>MD Advance</option>
+            <option>MD Intermediate</option>
+            <option>Intermediate</option>
+            <option>Novice</option>
+          </select>
+        </div>
+        <button type="submit">Check Registration Form</button>
+      </form>
+      <p class="status" id="formStatus" role="status" aria-live="polite"></p>
+    </section>
+    <section>
+      <h2>Registered Players Roster</h2>
+      <p class="muted">The live roster will appear here after Supabase is connected.</p>
+      <div class="filters" aria-label="Filter registrations by category" id="filters"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Player</th><th>Partner</th><th>Category</th><th>Status</th></tr></thead>
+          <tbody id="roster"><tr><td colspan="4" class="muted">No registrations yet. Database setup pending.</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <footer>Badminton Registration & Roster Management</footer>
+  <script>
+    'use strict';
+    const categories = ['All', 'MD Advance', 'MD Intermediate', 'Intermediate', 'Novice'];
+    const filters = document.getElementById('filters');
+    categories.forEach((category, index) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = category;
+      button.setAttribute('aria-pressed', String(index === 0));
+      button.addEventListener('click', () => {
+        filters.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+        button.setAttribute('aria-pressed', 'true');
+        document.querySelector('#roster td').textContent = 'No registrations yet. Database setup pending.';
+      });
+      filters.appendChild(button);
+    });
+    document.getElementById('registrationForm').addEventListener('submit', event => {
+      event.preventDefault();
+      document.getElementById('formStatus').textContent = 'Form details look good. Registration has NOT been saved. We will enable submissions after setting up Supabase.';
+    });
+  </script>
+</body>
+</html>
