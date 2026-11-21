@@ -6,7 +6,7 @@
   <meta name="description" content="Badminton player registration and live roster">
   <title>Badminton Registration & Roster</title>
   <style>
-    :root { font-family: system-ui, -apple-system, Segoe UI, sans-serif; color:#13302a; background:#f3f7f5; }
+    :root { font-family:system-ui,-apple-system,Segoe UI,sans-serif; color:#13302a; background:#f3f7f5; }
     * { box-sizing:border-box; }
     body { margin:0; }
     header { background:linear-gradient(125deg,#103b32,#23775b); color:#fff; padding:46px 20px; text-align:center; }
@@ -15,12 +15,13 @@
     main { max-width:990px; margin:26px auto; padding:0 16px 45px; display:grid; gap:20px; }
     section { background:white; border:1px solid #d8e6df; border-radius:18px; padding:24px; box-shadow:0 6px 18px #0b35250b; }
     h2 { margin:0 0 10px; font-size:1.35rem; }
-    .note { background:#fff5dc; color:#654b16; border:1px solid #f0d698; padding:12px; border-radius:10px; margin:15px 0; }
+    .note { background:#eef7f2; color:#165940; border:1px solid #bdd9c9; padding:12px; border-radius:10px; margin:15px 0; }
     form { display:grid; gap:15px; margin-top:20px; }
     label { font-weight:650; display:block; margin-bottom:6px; }
     input,select { width:100%; padding:12px 13px; border:1px solid #bfd2c8; border-radius:10px; background:#fff; font:inherit; }
     input:focus,select:focus { outline:2px solid #238d65; outline-offset:2px; }
     button { border:0; border-radius:10px; background:#176d50; color:#fff; padding:13px; font:inherit; font-weight:700; cursor:pointer; }
+    button:disabled { opacity:.55; cursor:wait; }
     button:focus-visible { outline:3px solid #ffce5b; outline-offset:3px; }
     .status { margin-top:12px; min-height:24px; }
     .filters { display:flex; flex-wrap:wrap; gap:9px; margin:16px 0; }
@@ -42,11 +43,13 @@
   <main>
     <section>
       <h2>Player Registration</h2>
-      <p class="muted">Complete the details below to register your team.</p>
-      <div class="note" role="status"><strong>Preview mode:</strong> Registration is not yet open. The database will be connected in Step 3.</div>
+      <p class="muted">Complete the details below to register your team. Enter a nickname for each player.</p>
+      <div class="note" role="status">Registration data, including nicknames, is stored in the new badminton-registration-roster database. Withdrawal and admin controls will be added in a later step.</div>
       <form id="registrationForm">
-        <div><label for="player">Player's Full Name</label><input id="player" name="player" maxlength="100" placeholder="e.g., Juan Dela Cruz" required autocomplete="name"></div>
-        <div><label for="partner">Partner's Full Name</label><input id="partner" name="partner" maxlength="100" placeholder="e.g., Pedro Santos" required></div>
+        <div><label for="player">Player's Full Name</label><input id="player" name="player" minlength="2" maxlength="100" placeholder="e.g., Juan Dela Cruz" required autocomplete="name"></div>
+        <div><label for="playerNickname">Player's Nickname</label><input id="playerNickname" name="playerNickname" maxlength="50" placeholder="e.g., Juan" required></div>
+        <div><label for="partner">Partner's Full Name</label><input id="partner" name="partner" minlength="2" maxlength="100" placeholder="e.g., Pedro Santos" required></div>
+        <div><label for="partnerNickname">Partner's Nickname</label><input id="partnerNickname" name="partnerNickname" maxlength="50" placeholder="e.g., Pete" required></div>
         <div><label for="category">Category</label>
           <select id="category" name="category" required>
             <option value="">Select category</option>
@@ -56,43 +59,131 @@
             <option>Novice</option>
           </select>
         </div>
-        <button type="submit">Check Registration Form</button>
+        <button id="submitButton" type="submit">Register Team</button>
       </form>
       <p class="status" id="formStatus" role="status" aria-live="polite"></p>
     </section>
     <section>
       <h2>Registered Players Roster</h2>
-      <p class="muted">The live roster will appear here after Supabase is connected.</p>
+      <p class="muted">Active registrations refresh automatically every 15 seconds.</p>
       <div class="filters" aria-label="Filter registrations by category" id="filters"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Player</th><th>Partner</th><th>Category</th><th>Status</th></tr></thead>
-          <tbody id="roster"><tr><td colspan="4" class="muted">No registrations yet. Database setup pending.</td></tr></tbody>
+          <thead><tr><th>Player</th><th>Nickname</th><th>Partner</th><th>Partner Nickname</th><th>Category</th><th>Status</th></tr></thead>
+          <tbody id="roster"><tr><td colspan="6" class="muted">Loading registrations…</td></tr></tbody>
         </table>
       </div>
+      <p class="status muted" id="rosterStatus" role="status" aria-live="polite"></p>
     </section>
   </main>
   <footer>Badminton Registration & Roster Management</footer>
   <script>
     'use strict';
-    const categories = ['All', 'MD Advance', 'MD Intermediate', 'Intermediate', 'Novice'];
+    // Public, RLS-restricted Supabase API credentials. Never use service_role/secret keys here.
+    const SUPABASE_URL = 'https://gxrntokijmxktjjdaxgx.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_zPJmdSfCcVylDljW_7lyaQ_DlTKGfBT';
+    const endpoint = `${SUPABASE_URL}/rest/v1/registrations`;
+    const headers = { apikey:SUPABASE_PUBLISHABLE_KEY, 'Content-Type':'application/json' };
+    const categories = ['All','MD Advance','MD Intermediate','Intermediate','Novice'];
     const filters = document.getElementById('filters');
+    const roster = document.getElementById('roster');
+    const rosterStatus = document.getElementById('rosterStatus');
+    const formStatus = document.getElementById('formStatus');
+    const submitButton = document.getElementById('submitButton');
+    let registrations = [];
+    let selectedCategory = 'All';
+    let loadingRoster = false;
+
+    function renderRoster() {
+      const displayed = registrations.filter(r => selectedCategory === 'All' || r.category === selectedCategory);
+      roster.replaceChildren();
+      if (!displayed.length) {
+        const row = roster.insertRow();
+        const cell = row.insertCell();
+        cell.colSpan = 6;
+        cell.className = 'muted';
+        cell.textContent = 'No registered pairs in this category yet.';
+        return;
+      }
+      displayed.forEach(r => {
+        const row = roster.insertRow();
+        [r.player_name, r.player_nickname || '—', r.partner_name, r.partner_nickname || '—', r.category, 'Registered'].forEach(value => {
+          row.insertCell().textContent = value ?? '';
+        });
+      });
+    }
+
     categories.forEach((category, index) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.textContent = category;
-      button.setAttribute('aria-pressed', String(index === 0));
-      button.addEventListener('click', () => {
-        filters.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', 'false'));
-        button.setAttribute('aria-pressed', 'true');
-        document.querySelector('#roster td').textContent = 'No registrations yet. Database setup pending.';
+      button.setAttribute('aria-pressed',String(index === 0));
+      button.addEventListener('click',() => {
+        selectedCategory = category;
+        filters.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed',String(b === button)));
+        renderRoster();
       });
       filters.appendChild(button);
     });
-    document.getElementById('registrationForm').addEventListener('submit', event => {
+
+    async function loadRoster() {
+      if (loadingRoster) return;
+      loadingRoster = true;
+      try {
+        const query = '?select=player_name,player_nickname,partner_name,partner_nickname,category,status,registered_at&status=eq.registered&order=registered_at.desc&limit=1000';
+        const response = await fetch(endpoint + query,{headers:{apikey:SUPABASE_PUBLISHABLE_KEY},cache:'no-store'});
+        if (!response.ok) throw new Error(`Database request failed (HTTP ${response.status}). Check Supabase RLS and Data API settings.`);
+        registrations = await response.json();
+        renderRoster();
+        rosterStatus.textContent = `${registrations.length} active registered pair(s).`;
+      } catch (error) {
+        rosterStatus.textContent = error.message;
+        if (!registrations.length) {
+          roster.replaceChildren();
+          const row = roster.insertRow();
+          const cell = row.insertCell();
+          cell.colSpan=6;
+          cell.textContent='Unable to load roster. Verify Supabase settings.';
+        }
+      } finally { loadingRoster = false; }
+    }
+
+    document.getElementById('registrationForm').addEventListener('submit',async event => {
       event.preventDefault();
-      document.getElementById('formStatus').textContent = 'Form details look good. Registration has NOT been saved. We will enable submissions after setting up Supabase.';
+      const player_name = document.getElementById('player').value.trim().replace(/\s+/g,' ');
+      const partner_name = document.getElementById('partner').value.trim().replace(/\s+/g,' ');
+      const player_nickname = document.getElementById('playerNickname').value.trim().replace(/\s+/g,' ');
+      const partner_nickname = document.getElementById('partnerNickname').value.trim().replace(/\s+/g,' ');
+      const category = document.getElementById('category').value;
+      if (player_name.length < 2 || partner_name.length < 2 || !player_nickname || !partner_nickname || player_nickname.length > 50 || partner_nickname.length > 50 || !categories.slice(1).includes(category)) {
+        formStatus.textContent = 'Please complete all fields.';
+        return;
+      }
+      if (player_name.toLocaleLowerCase() === partner_name.toLocaleLowerCase()) {
+        formStatus.textContent = 'Player and partner names must be different.';
+        return;
+      }
+      submitButton.disabled = true;
+      formStatus.textContent = 'Saving registration…';
+      try {
+        const response = await fetch(endpoint,{
+          method:'POST',
+          headers:{...headers,Prefer:'return=minimal'},
+          body:JSON.stringify({player_name,player_nickname,partner_name,partner_nickname,category})
+        });
+        if (!response.ok) {
+          const detail=await response.json().catch(()=>({}));
+          throw new Error(detail.message || `Registration failed (HTTP ${response.status}).`);
+        }
+        formStatus.textContent = 'Registration submitted successfully! Your pair should appear in the roster below.';
+        event.target.reset();
+        await loadRoster();
+      } catch(error) {
+        formStatus.textContent = `Could not register: ${error.message}`;
+      } finally { submitButton.disabled = false; }
     });
+    loadRoster();
+    setInterval(loadRoster,15000);
   </script>
 </body>
 </html>
