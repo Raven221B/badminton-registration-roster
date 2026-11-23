@@ -33,18 +33,64 @@
     th { background:#f0f6f2; }
     .muted { color:#587067; }
     footer { text-align:center; font-size:.85rem; color:#60756c; padding:0 16px 24px; }
+
+    /* BBC Christmas theme: visual styling only; database and registration JavaScript untouched. */
+    :root { color:#173e30; background:#f7f8f3; }
+    body { background:radial-gradient(circle at 10% 22%,#fff4e4 0,transparent 27%),radial-gradient(circle at 90% 70%,#eaf5ed 0,transparent 30%),#f7f8f3; }
+    body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.32;
+      background-image:radial-gradient(#d5e7dc 1.5px,transparent 2px),radial-gradient(#efd9bd 1px,transparent 2px);
+      background-size:62px 62px,91px 91px; background-position:0 10px,32px 24px; }
+    header { position:relative; isolation:isolate; overflow:hidden; padding:76px 20px 65px;
+      border-bottom:7px solid #d6af55;
+      background:radial-gradient(ellipse at 15% 20%,#245f4c 0,transparent 60%),linear-gradient(125deg,#0d342b 0%,#15533e 55%,#8a1f2b 150%); }
+    header::before,header::after { position:absolute; pointer-events:none; z-index:-1; font-size:clamp(5rem,15vw,10rem); opacity:.13; }
+    header::before { content:"❄"; top:10px; left:4%; transform:rotate(-15deg); }
+    header::after { content:"❄"; right:4%; bottom:-65px; transform:rotate(18deg); }
+    header h1 { font-family:Georgia,'Times New Roman',serif; font-size:clamp(2rem,6vw,3.5rem); text-shadow:0 2px 18px #06291e77; }
+    header p { color:#f9eeda; font-size:1.06rem; }
+    .holiday-kicker { display:inline-block; border:1px solid #e5c77e88; border-radius:99px; padding:8px 18px;
+      color:#ffe5a1; background:#ffffff15; letter-spacing:.18em; text-transform:uppercase; font-size:.74rem; font-weight:800; margin-bottom:15px; }
+    .holiday-subtitle { margin-top:12px; font-size:.86rem; color:#fbe7c8; }
+    .lights { position:absolute; inset:0 0 auto; display:flex; justify-content:space-around; padding:14px 8px 0;
+      border-top:2px solid #ead7a1; height:47px; pointer-events:none; }
+    .lights i { display:block; height:20px; width:13px; border-radius:45% 45% 55% 55%; background:#f5c94d;
+      box-shadow:0 0 12px 3px #f5c94d5c; position:relative; }
+    .lights i:nth-child(3n+1) { background:#ef756a; box-shadow:0 0 12px 3px #ef756a65; }
+    .lights i:nth-child(3n+2) { background:#b7e7dc; box-shadow:0 0 12px 3px #b7e7dc65; }
+    .lights i::before { content:""; position:absolute; height:7px; width:9px; background:#d6bf89; left:2px; top:-6px; border-radius:2px; }
+    main { position:relative; z-index:1; margin-top:-20px; }
+    section { position:relative; border:1px solid #e2d9bb; border-top:5px solid #ba2d3b;
+      box-shadow:0 15px 34px #133e2a18; }
+    section:nth-child(2) { border-top-color:#1b704f; }
+    section::after { content:"✦"; position:absolute; top:14px; right:21px; color:#c89f45; font-size:24px; }
+    h2 { font-family:Georgia,'Times New Roman',serif; color:#14503b; padding-right:28px; }
+    .note { background:#f0f7ef; border:1px solid #c9dfca; color:#244d39; border-left:4px solid #c4a04c; }
+    input,select { border-color:#c7d7c9; background:#fffefa; }
+    input:focus,select:focus { outline-color:#bd9a4f; }
+    button { background:linear-gradient(120deg,#9d2736,#c13743); box-shadow:0 4px 10px #8b26301b; }
+    button:not(:disabled):hover { filter:brightness(1.07); }
+    .filters button { background:#eff5ef; color:#1d6247; box-shadow:none; border:1px solid #d1e2d5; }
+    .filters button[aria-pressed="true"] { background:#146447; border-color:#146447; }
+    th { background:#eaf3e9; color:#164b37; }
+    footer { position:relative; z-index:1; color:#54705f; padding-bottom:30px; }
+    .footer-greeting { display:block; color:#a32b37; font-family:Georgia,'Times New Roman',serif; font-size:1.05rem; font-weight:bold; margin-bottom:5px; }
+    @media (max-width:600px) { header { padding-top:70px; } section { padding:20px 16px; } main { margin-top:-17px; } .lights i:nth-child(n+11) { display:none; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
   </style>
 </head>
 <body>
   <header>
-    <h1>🏸 Badminton Player Registration</h1>
-    <p>Register your team • View the roster • Stay updated</p>
+    <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="holiday-kicker">✦ BBC Holiday Edition ✦</div>
+    <h1>🎄 BBC Christmas Registration 🏸</h1>
+    <p>Register your team • View the roster • Celebrate together</p>
+    <div class="holiday-subtitle">❄ A season of friendly games & festive cheer ❄</div>
   </header>
   <main>
     <section>
-      <h2>Player Registration</h2>
+      <h2>🎁 Player Registration</h2>
       <p class="muted">Complete the details below to register your team. Enter a nickname for each player.</p>
-      <div class="note" role="status">Registration data, including nicknames, is stored in the new badminton-registration-roster database. Withdrawal and admin controls will be added in a later step.</div>
+      <div class="note" role="status">Registrations are submitted to the BBC Tournament registration database for admin review. Approved teams appear in the public roster. Withdrawal and admin controls will be added in a later step.</div>
       <form id="registrationForm">
         <div><label for="player">Player's Full Name</label><input id="player" name="player" minlength="2" maxlength="100" placeholder="e.g., Juan Dela Cruz" required autocomplete="name"></div>
         <div><label for="playerNickname">Player's Nickname</label><input id="playerNickname" name="playerNickname" maxlength="50" placeholder="e.g., Juan" required></div>
@@ -64,8 +110,8 @@
       <p class="status" id="formStatus" role="status" aria-live="polite"></p>
     </section>
     <section>
-      <h2>Registered Players Roster</h2>
-      <p class="muted">Active registrations refresh automatically every 15 seconds.</p>
+      <h2>🏸 Registered Players Roster</h2>
+      <p class="muted">Approved registrations refresh automatically every 15 seconds. New applications remain pending until an admin approves them.</p>
       <div class="filters" aria-label="Filter registrations by category" id="filters"></div>
       <div class="table-wrap">
         <table>
@@ -76,13 +122,13 @@
       <p class="status muted" id="rosterStatus" role="status" aria-live="polite"></p>
     </section>
   </main>
-  <footer>Badminton Registration & Roster Management</footer>
+  <footer><span class="footer-greeting">🎄 Merry Christmas from BBC! ✨</span>Badminton Registration & Roster Management</footer>
   <script>
     'use strict';
     // Public, RLS-restricted Supabase API credentials. Never use service_role/secret keys here.
-    const SUPABASE_URL = 'https://gxrntokijmxktjjdaxgx.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_zPJmdSfCcVylDljW_7lyaQ_DlTKGfBT';
-    const endpoint = `${SUPABASE_URL}/rest/v1/registrations`;
+    const SUPABASE_URL = 'https://vcshzqjozgzsgaknsjzq.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_PFxb5Crp0VaeStU9hosP2g_E-SIDyqs';
+    const endpoint = `${SUPABASE_URL}/rest/v1/player_registrations`;
     const headers = { apikey:SUPABASE_PUBLISHABLE_KEY, 'Content-Type':'application/json' };
     const categories = ['All','MD Advance','MD Intermediate','Intermediate','Novice'];
     const filters = document.getElementById('filters');
@@ -175,7 +221,7 @@
           const detail=await response.json().catch(()=>({}));
           throw new Error(detail.message || `Registration failed (HTTP ${response.status}).`);
         }
-        formStatus.textContent = 'Registration submitted successfully! Your pair should appear in the roster below.';
+        formStatus.textContent = 'Registration submitted successfully! Your team is Pending admin approval and will appear in the public roster after approval.';
         event.target.reset();
         await loadRoster();
       } catch(error) {
